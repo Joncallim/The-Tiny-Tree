@@ -16,14 +16,14 @@ DnD discord helper for the Dungeons and Diseases game. This is a post-FYP projec
 	- `/currency` tells you a bit about the conversion rate between currencies. `/currency info` brings up some useful blurb about money, especially for people (like myself) who can never remember what they all mean. `/currency convert N gp to sp` lets you convert `N` of any currency to another. This is case insensitive, and takes currency arguments as either `gp` or `gold`, `sp` or `silver`, etc.
 
 3. **_Player_** gets you *your own* information - you can't just go mess with someone else's stats or money!
-	- `money` brings up the money you currently own. This accesses data from a Google Sheet somewhere on the interwebs, but is pre-cached on the bot in order to speed up responses when you make any requests. If you absolutely **need** to update the money now because you made a change in Google Sheets, you can simply `/reload player` and it should re-download all of the necessary information. 
+	- `money` brings up the money you currently own. This accesses data from a Google Sheet somewhere on the interwebs, but is pre-cached on the bot in order to speed up responses when you make any requests. If you absolutely **need** to update the money now because you made a change in Google Sheets, you can simply `/reload player` and it should re-download all of the necessary information.
 	- `money add n gold` | `money remove n gold` will add or remove any particular currency (not just gold) of a particular amount to your own inventory. This still only works with the specific "gold" or "silver" (etc.) words. This is an immediate Google Sheets request so will take a bit longer than the other commands.
 	- `stats` brings up your stats as updated by the DM at some point. If there has been a level up, this will have been done by the DM, you shouldn't need to have to update it yourself - I understand that everyone has their own favourite ways to keep data, so kept away from too much automation.
 
-4. **_Party_** retrieves the party inventory from a .json file. jsons are fast, so I like them (This inventory is only stored locally, and you can't really just mess around with it at will - I'll add Google Sheets integration at some point). 
- - `inventory` | `inv` brings up the total party inventory (money and items).
- - `money` shows all of the various currencies that the party jointly holds. You can add/remove money with `/party money add 50 gold`/`/party money remove 50 gold`.
- - `items` brings up the items that the players holds (sans money.) You can add items as well, in the format `/party items add item name; value; item description`. You can use either `[ ; ]` or `[ / ]` as a seperator, and the value should be an integer number in gp (the item name and description can be of any length). Similarly, `/party items remove item name` will remove that item from the party inventory.
+4. **_Party_** retrieves the party inventory from a .json file. jsons are fast, so I like them (This inventory is only stored locally, and you can't really just mess around with it at will - I'll add Google Sheets integration at some point).
+	- `inventory` | `inv` brings up the total party inventory (money and items).
+	- `money` shows all of the various currencies that the party jointly holds. You can add/remove money with `/party money add 50 gold`/`/party money remove 50 gold`.
+	- `items` brings up the items that the players holds (sans money.) You can add items as well, in the format `/party items add item name; value; item description`. You can use either `[ ; ]` or `[ / ]` as a seperator, and the value should be an integer number in gp (the item name and description can be of any length). Similarly, `/party items remove item name` will remove that item from the party inventory.
 
 5.  **_Combat Helper_**, helps to start initiative, etc. Only rollable by DM. Does a check every 10 seconds to see if it needs to pull data from Google Drive, and if it does it will load all initiative and Pulls data from Google Drive while everyone is rolling initiative. (Within 10 seconds, so don't start combat too soon after initiating it)
 	- `/combat start` will start the initiative-rolling phase if the party is currently outside combat, and starts combat if the party is currently in the initiative phase. When combat is started, all encounter creatures have initative rolled for them automatically, and the DM should have already updated the google form *before* starting the preparation phase.
@@ -40,7 +40,7 @@ DnD discord helper for the Dungeons and Diseases game. This is a post-FYP projec
 
 Google Sheets requests run in the background as much as possible using `@tasks.loop` so that commands are responded to faster (particularly initiative rolls, unfortunately money updates still need an immediate update to happen so will take a while).
 
--
+---
 
 ### Links:
 
