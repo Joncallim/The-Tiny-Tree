@@ -8,7 +8,7 @@ DnD discord helper for the Dungeons and Diseases game. This is a post-FYP projec
 	- `advantage` | `adv` |  `a`, followed by the dice roll. All add advantage to your roll (i.e. roll the dice twice). They do not automatically take the higher of the two rolls - since sometimes a crit may mean you have an overall lower score.
 	- `disadvantage` | `disadv` |  `d`, followed by the dice. Similarly, all add disadvantage to your roll (i.e. roll the dice twice). It will display both rolls for your viewing pleasure.
 	- `initiative` | `init` only works if the DM has started the preparation phase for combat (i.e. the bot will tell you to roll for initiative. Realistically it would be simpler to have rolled initiative for everyone, but where's the fun in that...
-	- `/verbose` is a seperate command to `/r`, and toggles the amount of information that is shown by the bot. There are some cute prompts to tell you how much information is being shown.
+	- `/verbose` is a separate command to `/r`, and toggles the amount of information that is shown by the bot. There are some cute prompts to tell you how much information is being shown.
 	- Some neat tricks for `/r` include being able to let you know if a nat20 or nat1 has been rolled (only applies if the first dice rolled is a `1d20`).
 
 2. **_Helper_**, a fairly useful cog that gives you information about DnD stuff. Commands are:
