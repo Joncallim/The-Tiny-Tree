@@ -1,0 +1,19 @@
+{
+    "items": {
+        "Party Manifesto": {
+            "desc": "A list of party members.",
+            "value": 0
+        },
+        "The RV": {
+            "desc": "2-Axled Wagon with 4 Iron-Reinforced wheels. The latest in arrow-stopping technology keeps passengers and precious cargo safe from attackers.",
+            "value": 0
+        }
+    },
+    "money": {
+        "copper": 0,
+        "electrum": 0,
+        "gold": 0,
+        "platinum": 0,
+        "silver": 0
+    }
+}
