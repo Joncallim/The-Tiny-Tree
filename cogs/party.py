@@ -137,19 +137,19 @@ class party(commands.Cog):
                 moneyString = "{}{}: [{}]\n".format(moneyString, string.capwords(key), value)
             return "```Party inventory has been updated!\n{}```".format(moneyString)
         
-        def remove_money(self):
-            with open('files/party_inventory.json', 'r') as file:
-                inventory = json.load(file)
-            # This is easy, just automatically writes a new dictionary with 
-            # everything set to 0, so don't need to iterate through every value
-            # in the dictionary - we know exactly what should be in it, and no
-            # other currencies.
-            newMoney = {'platinum': 0, 'gold':0, 'electrum': 0, 'silver': 0, 'copper': 0}
-            inventory['money'].update(newMoney)
-            # Pushing new dict to json
-            with open('files/party_inventory.json', 'w') as f:
-                 f.write(json.dumps(inventory, sort_keys=True, indent=4))
-            return "```The party now holds no collective funds.```"
+    def remove_money(self):
+        with open('files/party_inventory.json', 'r') as file:
+            inventory = json.load(file)
+        # This is easy, just automatically writes a new dictionary with 
+        # everything set to 0, so don't need to iterate through every value
+        # in the dictionary - we know exactly what should be in it, and no
+        # other currencies.
+        newMoney = {'platinum': 0, 'gold':0, 'electrum': 0, 'silver': 0, 'copper': 0}
+        inventory['money'].update(newMoney)
+        # Pushing new dict to json
+        with open('files/party_inventory.json', 'w') as f:
+             f.write(json.dumps(inventory, sort_keys=True, indent=4))
+        return "```The party now holds no collective funds.```"
     
     @commands.Cog.listener()
     async def on_ready(self):

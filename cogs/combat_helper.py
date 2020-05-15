@@ -6,6 +6,9 @@ Created on Thu May 14 16:44:26 2020
 @author: Jonathan
 """
 
+import sys
+# Needed to make sure the going up a level in the file manager works.
+sys.path.append('../')
 import discord
 from discord.ext import commands, tasks
 
@@ -22,7 +25,7 @@ class combat_helper(commands.Cog):
         self.time_to_get_creatures = False
         # use creds to create a client to interact with the Google Drive API
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        creds = ServiceAccountCredentials.from_json_keyfile_name('files/client_secret.json', scope)
+        creds = ServiceAccountCredentials.from_json_keyfile_name('../secret/client_secret.json', scope)
         self.client = gspread.authorize(creds)
         
         self.get_creatures.start()

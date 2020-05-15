@@ -9,6 +9,9 @@ Tasks are used in this Cog to cache everything from the google docs - this helps
 to dramatically speed up response times, but puts a bit more drain on bandwidth.
 """
 
+import sys
+# Needed to make sure the going up a level in the file manager works.
+sys.path.append('../')
 import discord
 from discord.ext import commands, tasks
 
@@ -25,7 +28,7 @@ class player_commands(commands.Cog):
         # use creds to create a client to interact with the Google Drive API
         # Opens early to try speed things up.
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        creds = ServiceAccountCredentials.from_json_keyfile_name('files/client_secret.json', scope)
+        creds = ServiceAccountCredentials.from_json_keyfile_name('../secret/client_secret.json', scope)
         client = gspread.authorize(creds)
         self.player_sheet = client.open("Character Details").sheet1
         

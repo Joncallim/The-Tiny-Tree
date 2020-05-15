@@ -5,6 +5,7 @@ Created on Thu May 14 18:37:45 2020
 
 @author: Jonathan
 """
+
 import discord
 from discord.ext import commands
 import string
@@ -51,8 +52,10 @@ A standard coin weighs about a third of an ounce, so fifty coins weigh a pound.`
     async def spell_helper(self, ctx, *arg):
         with open('files/spell_data_long.json', 'r') as file:
             spell_list = json.load(file)
-        # Changes text to intial caps. Note that this is going to be absolutely ruined by any lack of spaces, but at least capitalisation won't be an issue.
-        spell_name = string.capwords(' '.join(arg[0:].lower()))
+        # Changes text to intial caps. Note that this is going to be absolutely 
+        # ruined by any lack of spaces, but at least capitalisation won't be an 
+        # issue.
+        spell_name = string.capwords(' '.join(arg[:]))
         # Gets actual spell's dictionary from the dict containing all the spells
         spell = spell_list.get(spell_name)
         # Returns the actual output string that's to be printed in Discord.

@@ -220,7 +220,7 @@ class dice(commands.Cog):
         # function.
         if self.initiative:
             if self.advantage | self.disadvantage:
-                outputString = "```{}/nInitiative: [{}]\nRoll 1: [{}], Roll 2: [{}]\n({})```".format(str_2, max(self.dice_total,self.dice_total_2),  self.dice_total, self.dice_total_2, dice_inputs)
+                outputString = "```{}\nInitiative: [{}]\nRoll 1: [{}], Roll 2: [{}]\n({})```".format(str_2, max(self.dice_total,self.dice_total_2),  self.dice_total, self.dice_total_2, dice_inputs)
                 return outputString
             else:
                 outputString = "```{}\nTotal: [{}] ({})```".format(str_2, self.dice_total, dice_inputs)
@@ -342,7 +342,7 @@ class dice(commands.Cog):
             # This is the check for an advantage roll. If it's an advantage roll
             # the first 2 arguments need to be removed (i.e. init adv instead of 
             # just init.).
-            if self.check_double_roll(arg[0]):
+            if self.check_double_roll(arg[1]):
                 arg = arg[2:]
             else:
                 arg = arg[1:]
