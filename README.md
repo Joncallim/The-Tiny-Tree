@@ -1,7 +1,7 @@
 # The Tiny Tree (DnD Discord Bot)
 ## Readme
 
-DnD discord helper for the Dungeons and Diseases game. This is a post-FYP project written by myself, and I'll add ocassional things to it as and when the inspiration strikes. Commands for this bot are all called with the `/` character. There are currently the following functions:
+DnD discord helper for the Dungeons and Diseases game. This is a post-FYP project written by myself, and I'll add occassional things to it as and when the inspiration strikes. Commands for this bot are all called with the `/` character. There are currently the following functions:
 
 1. **_Dice_**, Called with the `/r` prefix. Rolls an `nDm` number of dice - where `n` is the number of dice and `m` is the number of sides per dice. This has several modifiers that can be added:
 	- `ndm + ndm - ndm + x - y`, which follows the format of `n` `m`-sided die, and `x` and `y` are both constant modifiers to the roll. `+` and `-` should work anywhere in the statement (including right at the start), but note that any white space is ignored, so if you miss a `+` somewhere the numbers are just mushed together.
