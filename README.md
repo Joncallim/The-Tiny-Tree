@@ -1,7 +1,11 @@
 # The Tiny Tree (DnD Discord Bot)
 ## Readme
 
-DnD discord helper for the Dungeons and Diseases game. This is a post-FYP project written by myself, and I'll add occassional things to it as and when the inspiration strikes. Commands for this bot are all called with the `/` character. There are currently the following functions:
+DnD discord helper for the Dungeons and Diseases game. This is a post-FYP project written by myself, and I'll add occassional things to it as and when the inspiration strikes. 
+
+The Order of the Tiny Tree is a fictional religion within my DnD campaign (mostly because a couple of us wanted a ridiculous, out-of-this-world religion) and involves a sect of Tortle monks who grow bonsais on their shells and are pretty extremist eco-terrorists (you can guess where this is going).
+
+Commands for this bot are all called with the `/` character. There are currently the following functions:
 
 1. **_Dice_**, Called with the `/r` prefix. Rolls an `nDm` number of dice - where `n` is the number of dice and `m` is the number of sides per dice. This has several modifiers that can be added:
 	- `ndm + ndm - ndm + x - y`, which follows the format of `n` `m`-sided die, and `x` and `y` are both constant modifiers to the roll. `+` and `-` should work anywhere in the statement (including right at the start), but note that any white space is ignored, so if you miss a `+` somewhere the numbers are just mushed together.
@@ -44,6 +48,7 @@ Google Sheets requests run in the background as much as possible using `@tasks.l
 
 ### Links:
 
-- [Add Release Version to Server](https://discord.com/api/oauth2/authorize?client_id=709719343822405724&permissions=2013789296&scope=bot)
-- [Add Test Version to Server](https://discord.com/api/oauth2/authorize?client_id=709009411900833792&permissions=8&scope=bot)
+Note: The only bits of this bot that will work for you are the `/helper` and `/dice` Cogs, so I've removed links that let you add the bot to your server. (Everything else is a custom build for my game). Feel free to drop me an e-mail if you'd like some help setting up for your own game!
+
 - [Discord.py Reference](https://discordpy.readthedocs.io/en/latest/index.html#)
+- [Github Page (Probably this page)](https://github.com/Joncallim/The-Tiny-Tree)

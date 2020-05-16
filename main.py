@@ -62,7 +62,6 @@ async def on_ready():
     channel = discord.utils.get(guild.channels, name='general')
     await channel.send("```{} {}```".format(random.choice(bot.tree_lord_titles), random.choice(bot.entry_quotes)))
 
-
 @bot.command(help = "Loads extensions.")
 async def load(ctx, extension):
     bot.load_extension(f"cogs.{extension}")
