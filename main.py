@@ -21,7 +21,7 @@ import nest_asyncio
 nest_asyncio.apply()
 
 
-with open('../secret/bot_codes.json', 'r') as file:
+with open('../tt_secret/bot_codes.json', 'r') as file:
     codes = json.load(file)
 
 TOKEN = codes.get('token-test')
