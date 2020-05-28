@@ -59,7 +59,10 @@ async def on_ready():
     members = '\n - '.join([member.display_name for member in guild.members])
     print(f'Guild Members:\n - {members}')
     channel = discord.utils.get(guild.channels, name='general')
-    await channel.send("```{} {}```".format(random.choice(bot.tree_lord_titles), random.choice(bot.entry_quotes)))
+    embed = discord.Embed(title="{} {}".format(random.choice(bot.tree_lord_titles), random.choice(bot.entry_quotes)),
+                          description="The Tiny Tree D&D bot has been loaded.",
+                          color=0xCCD1D1)
+    await channel.send(embed = embed)
 
 @bot.command(help = "Loads extensions.")
 async def load(ctx, extension):
@@ -80,12 +83,18 @@ async def reload(ctx, extension):
     
 @bot.command(name='status', help='Checks if bot is active')
 async def check_status(ctx):
-    await ctx.send("```{} {}```".format(random.choice(bot.tree_lord_titles), random.choice(bot.entry_quotes)))
+    embed = discord.Embed(title="{} {}".format(random.choice(bot.tree_lord_titles), random.choice(bot.entry_quotes)),
+                          description="The Tiny Tree D&D bot is active.",
+                          color=0xCCD1D1)
+    await ctx.send(embed = embed)
 
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CheckFailure):
-        await ctx.send('```You do not have the correct role for this command.```')
+        embed = discord.Embed(title="You do not have the correct role for this command.",
+                          description="Only the DM can execute this command.",
+                          color=0xCCD1D1)
+        await ctx.send(embed = embed)
 
 # This just goes through all the .py files in the cogs directory and loads them
 # at the first start of this bot.
