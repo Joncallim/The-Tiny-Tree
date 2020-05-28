@@ -44,6 +44,8 @@ Commands for this bot are all called with the `/` character. There are currently
 
 Google Sheets requests run in the background as much as possible using `@tasks.loop` so that commands are responded to faster (particularly initiative rolls, unfortunately money updates still need an immediate update to happen so will take a while).
 
+Last updated: 15 May 2020 (Check the changelog for any newer updates)
+
 ---
 
 ### Links:

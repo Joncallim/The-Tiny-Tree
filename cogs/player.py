@@ -14,10 +14,11 @@ import sys
 sys.path.append('../')
 import discord
 from discord.ext import commands, tasks
+from datetime import datetime
+import random
 
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-
 
 class player_commands(commands.Cog):
     
@@ -77,10 +78,10 @@ class player_commands(commands.Cog):
         else:
             new_val = int(original_val) - int(amount)
         if new_val < 0:
-            return 'fail'
+            return 'fail', None
         else:
             self.player_sheet.update_cell(row_ident, col_ident, new_val)
-            return new_val
+            return new_val, int(original_val)
         
     # Returns the player as an array so that the category can be used. Need to 
     # iterate through the whole list because of shitty gdocs formatting
@@ -94,43 +95,60 @@ class player_commands(commands.Cog):
     # that can be changed. Same as with money.)
     def get_player_details(self, userID):
         self.get_player(userID)
-        charDetailsString = '''```{}\nInitiative: [{}]\nAC: [{}]\nStrength: [{}]\nDexterity: [{}]\nConstitution: [{}]\nIntelligence: [{}]\nWisdom: [{}]\nCharisma: [{}]```'''.format(self.player_info['char_name'], self.player_info['initiative'], self.player_info['armour_class'], self.player_info['strength'], self.player_info['dexterity'], self.player_info['constitution'], self.player_info['intelligence'], self.player_info['wisdom'], self.player_info['charisma'])
-        return charDetailsString
+        embed = discord.Embed(title="{}'s Stats:".format(self.player_info['char_name']),
+                              description="Initiative: [{}]\nAC: [{}]\nStrength: [{}]\nDexterity: [{}]\nConstitution: [{}]\nIntelligence: [{}]\nWisdom: [{}]\nCharisma: [{}]".format(self.player_info['initiative'], self.player_info['armour_class'], self.player_info['strength'], self.player_info['dexterity'], self.player_info['constitution'], self.player_info['intelligence'], self.player_info['wisdom'], self.player_info['charisma']),
+                              color=0x85C1E9)
+        return embed
     
     def get_player_money(self, userID):
         self.get_player(userID)
-        moneyString = '''```{}\nPlatinum: {}, Gold: {}, Electrum: {}, Silver: {}, Copper: {}```'''.format(self.player_info['char_name'], self.player_info['platinum'], self.player_info['gold'], self.player_info['electrum'], self.player_info['silver'], self.player_info['copper'])
-        return moneyString
+        embed = discord.Embed(title="{}'s Finances:".format(self.player_info['char_name']),
+                              description="Platinum: {}, Gold: {}, Electrum: {}, Silver: {}, Copper: {}".format(self.player_info['platinum'], self.player_info['gold'], self.player_info['electrum'], self.player_info['silver'], self.player_info['copper']),
+                              color=0x85C1E9)
+        return embed
 
     @commands.command(name='player', help="Player Details.\n1. [money] will display the current money you have, as stored in the Google Sheet.\n2. [stats] or [info] will display your current stats, again as stored in the Google Sheet.\n3. [money add 50 gold] will add 50 gold to your inventory. You can enter any of the platinum, gold, electrum, silver or copper currencies, and use add/remove to add or remove an amount of currency from your inventory. It will then be automatically updated.")
     async def player(self, ctx, *arg):
         if arg[0].lower() == 'money':
             if len(arg) == 1:
-                playerString = self.get_player_money(str(ctx.author.id))
+                embed = self.get_player_money(str(ctx.author.id))
             elif arg[1].lower() == 'add':
-                new_amount = self.update_money(ctx.author.id, arg[3], arg[2], increase=True)
-                playerString = "```{} now has {} {}!```".format(ctx.author.display_name, new_amount, arg[3])
+                new_amount, original_amount = self.update_money(ctx.author.id, arg[3], arg[2], increase=True)
+                embed = discord.Embed(title="{} now has {} {}!".format(ctx.author.display_name, new_amount, arg[3]),
+                                          description="You added {} to an original of {} {}!".format(arg[2], original_amount, arg[3]),
+                                          color=0x85C1E9)
             elif arg[1].lower() == 'remove':
-                new_amount = self.update_money(str(ctx.author.id), arg[3], arg[2], increase=False)
+                new_amount, original_amount = self.update_money(str(ctx.author.id), arg[3], arg[2], increase=False)
                 if new_amount == 'fail':
-                    playerString = "```{} does not have that much {}!```".format(ctx.author.display_name, arg[3])
+                    embed = discord.Embed(title="{} rustles his leaves in disapproval.".format(random.choice(self.bot.tree_lord_titles)),
+                                          description="You do not have that much {}, {}!".format(arg[3], ctx.author.mention),
+                                          color=0x85C1E9)
                 else:
-                    playerString = "```{} now has {} {}!```".format(ctx.author.display_name, new_amount, arg[3])
+                    embed = discord.Embed(title="{} now has {} {}!".format(ctx.author.display_name, new_amount, arg[3]),
+                                          description="You removed {} from an original of {} {}!".format(arg[2], original_amount, arg[3]),
+                                          color=0x85C1E9)
             else:
-                playerString = '```Check your message syntax: /player money [options], where [options] must be in the order: add/remove amount currency.```'
-    
+                embed = discord.Embed(title="Check your message syntax:",
+                                      description="You can type `/player money [options]`, where `[options]` must be in the order: `add/remove amount currency`.",
+                                      color=0x85C1E9)
+                
         elif (arg[0].lower() == 'stats') | (arg[0].lower() == 'info'):
-            playerString = self.get_player_details(str(ctx.author.id))
+            embed = self.get_player_details(str(ctx.author.id))
              
         else:
-            playerString = '```You need to add an argument to the /player command. For help type /help player.```'
+            embed = discord.Embed(title="You need to add an argument to the `/player` command.",
+                                  description="For help type `/help player`.",
+                                  color=0x85C1E9)
             
-        await ctx.send(playerString)
+        await ctx.send(embed = embed)
         
     @commands.command(name="update_player_info", help="Updates player details by pulling info off google docs NOW. Otherwise, performs this action every 30 minutes.")
     async def update_player_info(self, ctx):
         self.player_list = self.player_sheet.get_all_records()
-        await ctx.send('```Player details have been updated!```')
+        embed = discord.Embed(title="Player details have been updated!",
+                              description="Data retrieved from Google Sheets at {}".format(datetime.now()),
+                              color=0x85C1E9)
+        await ctx.send(embed = embed)
         
 def setup(bot):
     bot.add_cog(player_commands(bot))

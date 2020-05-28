@@ -12,6 +12,7 @@ sys.path.append('../')
 import discord
 import random
 import json
+from functions import combat_class
 
 
 from discord.ext import commands
@@ -24,12 +25,12 @@ nest_asyncio.apply()
 with open('../tt_secret/bot_codes.json', 'r') as file:
     codes = json.load(file)
 
-TOKEN = codes.get('token-stable')
+TOKEN = codes.get('token-test')
 GUILD = codes.get('server')
-
 
 bot = commands.Bot(command_prefix = '/')
 
+bot.combat_class = combat_class()
 bot.roll_verbose = True
 
 bot.tree_lord_titles = ['Our Lord and Saviour the Tiny Tree',
@@ -45,8 +46,6 @@ bot.entry_quotes = ['is here!',
                   'has arrived. All hail!',
                   'anchors us with his great roots']
 
-bot.turn_order_values = []
-bot.turn_order_ids = []
 # Combat states include Preparation Phase, Outside Combat, and In Combat
 bot.combat_state = "Outside Combat"
 bot.initiative_list = {}

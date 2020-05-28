@@ -43,48 +43,12 @@ class combat_helper(commands.Cog):
             # data as the creature list.
             sheet = self.client.open("Encounter Creatures").sheet1
             self.creature_list = sheet.get_all_records()
+            self.bot.combat_class.AddCreaturesToTurnOrder(self.creature_list)
             self.time_to_get_creatures = False
             print('Creature list has been loaded!')
             pass
         else:
             pass
-        
-    def set_all_initiative(self):
-        # Goes through the creatures in the creature list that should have been
-        # generated in the background, and appends them to the list of players.
-        # This should be fairly quick, unlike accessing data from google sheets.
-        for creature in self.creature_list:
-            self.bot.turn_order_ids.append(creature['creature_name'])
-            # Rolls initiative for each creature much like how it would be done
-            # for a player. If advantage/disadvantage is specified on the sheet,
-            # this data will also be retrieved, and an appropriate roll will be
-            # done for them.
-            if creature['init_type'] == 'normal':
-                creature_initiative = random.randint(1,20) + creature['initiative'] + (0.01 * creature['dexterity'])
-            elif creature['init_type'] == 'advantage':
-                roll_1 = random.randint(1,20) + creature['initiative'] + (0.01 * creature['dexterity'])
-                roll_2 = random.randint(1,20) + creature['initiative'] + (0.01 * creature['dexterity'])
-                creature_initiative = max(roll_1, roll_2)
-            elif creature['init_type'] == 'disadvantage':
-                roll_1 = random.randint(1,20) + creature['initiative'] + (0.01 * creature['dexterity'])
-                roll_2 = random.randint(1,20) + creature['initiative'] + (0.01 * creature['dexterity'])
-                creature_initiative =  min(roll_1, roll_2)
-            self.bot.turn_order_values.append(creature_initiative)
-        # Uses ZIP to sort players and creatures by initiative, then spits out 
-        # the turn order using this sort. Sorts in decreasing order, since the
-        # highest initiative should go first.
-        sorted_turn_order = sorted(zip(self.bot.turn_order_values, self.bot.turn_order_ids), reverse=True)
-        # Ignores the secret initiative scores, just prints a list of players in
-        # order of their turns.
-        sorted_turn_list = [element for _, element in sorted_turn_order]
-        # Just an empty array for turn_string_list
-        turn_string_list = [None for x in range(len(sorted_turn_list))]
-        # For each entry in the turn order, generates a string with the correct
-        # number appended to the front of it.
-        for i, entry in enumerate(sorted_turn_list):
-            turn_string_list[i] = "{}. {}".format(str(i+1), entry)
-        turnOrderString = '\n'.join(turn_string_list)
-        return turnOrderString
         
     def generate_initiative(self):
         # Find a workbook by name and open the first sheet
@@ -109,13 +73,18 @@ class combat_helper(commands.Cog):
         # Sets the combat state to outside combat, then scrubs the turn order
         # lists so they're empty for the next time we encounter combat.
         self.bot.combat_state = "Outside Combat"
-        self.bot.turn_order_ids = []
-        self.bot.turn_order_values = []
-        return "```Combat is now over. Well done.```"
+        self.bot.combat_class.reset()
+        combatEmbed = discord.Embed(title="Combat is now over!",
+                                    description="Well done on surviving the encounter.",
+                                    color=0xFF0000)
+        return combatEmbed
     
     def prepare(self):
         if self.bot.combat_state == "Preparation Phase":
-            return "```Already in Preparation Phase!```"
+            combatEmbed = discord.Embed(title="Already in Preparation Phase!",
+                                        description="Use `/combat start` to begin combat",
+                                        color=0xFF0000)
+            return combatEmbed
         else:
             self.bot.combat_state = "Preparation Phase"
             # This is set to True so that only one google docs pull happens when
@@ -124,38 +93,102 @@ class combat_helper(commands.Cog):
             # but will not run if it is False.
             self.time_to_get_creatures = True
             self.generate_initiative()
-            return "```Roll for initiative! Encounter is about to begin!```"
+            combatEmbed = discord.Embed(title="Roll for initiative!",
+                                        description="Encounter is about to begin! You can use `/r init`, `/r init a` if you have advantage, or `/r init d` if you have disadvantage.",
+                                        color=0xFF0000)
+            return combatEmbed
         
     def start(self):
         if self.bot.combat_state == "In Combat": 
-            return '```Party is already in combat!```'
+            combatEmbed = discord.Embed(title="The party is already in combat!",
+                                        description="Use `/combat end` to terminate combat",
+                                        color=0xFF0000)
+            return combatEmbed
         elif self.bot.combat_state == "Preparation Phase":
             self.bot.combat_state = "In Combat"
-            return "```Combat Begins! Turn Order:\n{}```".format(self.set_all_initiative())
+            combatEmbed = discord.Embed(title="Combat Begins!",
+                                        color=0xFF0000)
+            combatEmbed.add_field(name = "Turn Order:",
+                                  value = "{}".format(self.bot.combat_class.GetSortedTurns()),
+                                  inline = True)
+            return combatEmbed
         elif self.bot.combat_state == "Outside Combat":
             return self.prepare()
         
         
     @commands.command(name='combat', help='Combat Turns (DM-Only).\n1. [state] tells you the current combat phase. There are three phases: "In Combat", "Outside Combat" and "Preparation Phase". Initiative rolls can only be made during the preparation phase, and no other time.\n2. [start] turns "Outside Combat" to "Preparation Phase" and "Preparation Phase" to "In Combat".\n3. [prepare] also switches the state from "Outside Combat" to "Preparation Phase".\n4. [end] terminates combat. "In Combat" switches to "Outside Combat".\nNot entering any data brings up the current state.')
     @commands.has_role('DM')
-    async def create_channel(self, ctx, arg):
+    async def combat(self, ctx, arg):
         
         if arg.lower() == "state":
-            combatString = '```Current combat state: {}```'.format(self.bot.combat_state)
+            combatEmbed = discord.Embed(title="Current combat state:",
+                                        description="{}".format(self.bot.combat_state),
+                                        color=0xFF0000)
             
         elif arg.lower() == "start":
-            combatString  = self.start()
+            combatEmbed  = self.start()
        
         elif (arg.lower() == "prepare") | (arg.lower() == "prep"):
-            combatString = self.prepare()
+            combatEmbed = self.prepare()
        
         elif arg.lower() == "end":
-            combatString = self.end_combat()
+            combatEmbed = self.end_combat()
         
         else:
-            combatString = '```This begins combat. A few things you can do here:\n1. [state] tells you the current combat phase. There are three phases: "In Combat", "Outside Combat" and "Preparation Phase". Initiative rolls can only be made during the preparation phase, and no other time.\n2. [start] turns "Outside Combat" to "Preparation Phase" and "Preparation Phase" to "In Combat".\n3. [prepare] also switches the state from "Outside Combat" to "Preparation Phase".\n4. [end] terminates combat. "In Combat" switches to "Outside Combat".\nNot entering any data brings up the current state.```'
+            combatEmbed = discord.Embed(title="Combat:",
+                                        description="Help and information",
+                                        color=0xFF0000)
+            combatEmbed.add_field(name = "`/combat state`:",
+                                  value = "This tells you the current combat phase. There are three phases: *'In Combat'*, *'Outside Combat'* and *'Preparation Phase'*. Initiative rolls can only be made during the preparation phase, and no other time.",
+                                  inline = False)
+            combatEmbed.add_field(name = "`/combat start`:",
+                                  value = "This changes the combat state from *'Outside Combat'* to *'Preparation Phase'* and from *'Preparation Phase'* to *'In Combat'*.",
+                                  inline = False)
+            combatEmbed.add_field(name = "`/combat prepare`:",
+                                  value = "This changes the combat state from *'Outside Combat'* to *'Preparation Phase'*.",
+                                  inline = False)
+            combatEmbed.add_field(name = "`/combat end`:",
+                                  value = "This will terminate combat. The combat state will change from *'In Combat'* to *'Outside Combat'*",
+                                  inline = False)
+            combatEmbed.add_field(name = "`/kill X`:",
+                                  value = "Can be used to remove any player or NPC from the turn order. **X** corresponds to the player's number in the turn order. Note this **cannot** be undone.",
+                                  inline = False)
+            combatEmbed.add_field(name = "`/turnorder`:",
+                                  value = "Allows **any** player to view the current active turn order.",
+                                  inline = False)
         
-        await ctx.send(combatString)
+        await ctx.send(embed = combatEmbed)
+        
+    @commands.command(name='kill', help='(DM-Only) Kills a player in the turn order, typically a creature. Note that this action **cannot** be undone. Uses the index number to kill. i.e. [/kill 1] will kill the first player in the turn order.')
+    @commands.has_role('DM')
+    async def kill(self, ctx, arg):
+        if (self.bot.combat_state == "In Combat") & (len(self.bot.combat_class.PlayerNames) > 1) & (int(arg) < (len(self.bot.combat_class.PlayerNames) + 1)):
+            newTurnString = self.bot.combat_class.RemovePlayer(int(arg))
+            embed = discord.Embed(title="Character killed!",
+                                  color=0xFF0000)
+            embed.add_field(name = "New Turn Order:", 
+                            value = newTurnString, 
+                            inline = True)
+            
+        else:
+            embed = discord.Embed(title="You can't do that right now!",
+                                  description="You need to:\n - Be *in combat*.\n - Have more than 1 character remaining in the turn order.\n - Select a player curently in the turn order.",
+                                  color=0xFF0000)
+        await ctx.send(embed = embed)
+    
+    @commands.command(name='turnorder', help="Displays the current turn order. If in combat, shows the active turn order. Otherwise, doesn't.")
+    async def turnorder(self, ctx):
+        if self.bot.combat_state == "In Combat":
+            embed = discord.Embed(title="In Combat!",
+                                  color=0xFF0000)
+            embed.add_field(name = "Turn Order:", 
+                            value = "{}".format(self.bot.combat_class.GetSortedString()), 
+                            inline = True)
+        else:
+            embed = discord.Embed(title="You can't do that right now!",
+                                  description="The party needs to be in combat for an active turn order to be generated.",
+                                  color=0xFF0000)
+        await ctx.send(embed=embed)
     
 def setup(bot):
     bot.add_cog(combat_helper(bot))

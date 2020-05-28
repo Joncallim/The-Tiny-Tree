@@ -134,8 +134,6 @@ class dice(commands.Cog):
                         # such.
                         if rolled == 1: 
                             self.nat_toggle = 2
-                        else:
-                            self.nat_toggle = 0
                         # If there is advantage/disadvantage, makes a second
                         # set of rolls to store and save.
                         if self.advantage | self.disadvantage:
@@ -147,8 +145,6 @@ class dice(commands.Cog):
                                 self.nat_toggle = 1
                             if rolled == 1: 
                                 self.nat_toggle = 2
-                            else:
-                                self.nat_toggle = 0
                 else:
                     # If the value is positive, but doesn't need to be rolled,
                     # it's just appended to the list, and added on to the max
@@ -187,15 +183,15 @@ class dice(commands.Cog):
     
     # Tidy little function to generate all the possible dice stats that need to
     # be printed. 
-    def roll_print(self, dice_inputs, author_name):
+    def roll_print(self, dice_inputs, author):
         dice_str_out = dice_inputs.lower().strip().replace(" ", "").replace("+", " + ").replace("-", " - ")
         # passes author through so it can be used to get initiative for that one
         # little string, and the display names for everything else. First checks 
         # if it's an initiative roll...
         if self.initiative:
-            str_0 = '{} rolls for initiative'.format(author_name)
+            str_0 = '{} rolled for initiative'.format(author.mention)
         else:
-            str_0 = '{} rolls the dice'.format(author_name)
+            str_0 = '{} rolled the dice'.format(author.mention)
         # Now, if it's an advantage or disadvantage roll. These are all fairly 
         # straightforward, it's just putting fancy words in strings.
         if self.advantage:
@@ -208,45 +204,98 @@ class dice(commands.Cog):
         # rolls so this is fine to stay in the main loop. Since non-crits happen
         # most regularly, this is the first if-term... So the search doesn't 
         # need to be made every single time.
+        # UPDATE EMBEDS: Using "init_string" now to display on the top line, so
+        # players don't have to see the whole chunk of text all the time.
         if self.nat_toggle == 0:
             str_2 = f"{str_1}!"
+            init_string = ""
         elif self.nat_toggle == 2:
             str_2 = f"{str_1} and fails miserably!"
+            init_string = "Nat 1! "
         else:
             str_2 = f"{str_1} and gets a Crit!"
+            init_string = "Crit! "
         # Initiative string!!! Initiative rolls don't care about verbosity, so
         # this set lives apart from the others. If it's an initiative roll, the
         # string is returned from these statements, skipping the rest of the 
         # function.
         if self.initiative:
-            if self.advantage | self.disadvantage:
-                outputString = "```{}\nInitiative: [{}]\nRoll 1: [{}], Roll 2: [{}]\n({})```".format(str_2, max(self.dice_total,self.dice_total_2),  self.dice_total, self.dice_total_2, dice_inputs)
-                return outputString
+            if self.advantage:
+                embed = discord.Embed(title="{}'s Initiative: **{}**".format(author.display_name, max(self.dice_total,self.dice_total_2)), 
+                                      description="{}\nRoll 1: [{}], Roll 2: [{}]\nInputs: [{}]".format(str_2, self.dice_total, self.dice_total_2, dice_inputs), 
+                                      color=0xFF0000)
+                return embed
+            elif self.disadvantage:
+                embed = discord.Embed(title="{}'s Initiative: **{}**".format(author.display_name, min(self.dice_total,self.dice_total_2)), 
+                                      description="{}\nRoll 1: [{}], Roll 2: [{}]\nInputs: [{}]".format(str_2, self.dice_total, self.dice_total_2, dice_inputs), 
+                                      color=0xFF0000)
+                return embed
             else:
-                outputString = "```{}\nTotal: [{}] ({})```".format(str_2, self.dice_total, dice_inputs)
-                return outputString
+                embed = discord.Embed(title="{}'s Initiative: **{}**".format(author.display_name, max(self.dice_total,self.dice_total_2)), 
+                                      description="{}\nInputs: [{}]".format(str_2, dice_inputs), 
+                                      color=0xFF0000)
+                return embed
         if self.verbose:
-            if self.advantage | self.disadvantage:
-                outputString = """```{}\nTotal 1: [{}]; Total 2: [{}]\nRoll 1: {}; Roll 2: {};\nInput: [{}]; Maximum Possible: {}```""".format(str_2, self.dice_total, self.dice_total_2, self.dice_indiv, self.dice_indiv_2, dice_str_out, self.dice_max)
-                return outputString
+            
+            if self.advantage:
+                embed = discord.Embed(title="{}'s Roll: **{}**".format(author.display_name, max(self.dice_total,self.dice_total_2)), 
+                                      description="{}\nTotal 1: [{}]; Total 2: [{}]\nRoll 1: {}; Roll 2: {};\nInput: [{}]; Maximum Possible: {}".format(str_2, self.dice_total, self.dice_total_2, self.dice_indiv, self.dice_indiv_2, dice_str_out, self.dice_max), 
+                                      color=0x1ABC9C)
+                return embed
+            elif self.disadvantage:
+                embed = discord.Embed(title="{}'s Roll: **{}**".format(author.display_name, min(self.dice_total,self.dice_total_2)), 
+                                      description="{}\nTotal 1: [{}]; Total 2: [{}]\nRoll 1: {}; Roll 2: {};\nInput: [{}]; Maximum Possible: {}".format(str_2, self.dice_total, self.dice_total_2, self.dice_indiv, self.dice_indiv_2, dice_str_out, self.dice_max), 
+                                      color=0x1ABC9C)
+                return embed
             else:
-                outputString = """```{} Total: {}\nIndividual: {}; Input: [{}]\nMaximum Possible: {}; Percentage of Max Roll: {:.2f}%```""".format(str_2, self.dice_total, self.dice_indiv, dice_str_out, self.dice_max, self.percentage_max())
-                return outputString
+                embed = discord.Embed(title="{}{}'s Roll: **{}**".format(init_string, author.display_name, self.dice_total), 
+                                      description="{}\nIndividual: {}; Input: [{}]\nMaximum Possible: {}; Percentage of Max Roll: {:.2f}%".format(str_2, self.dice_indiv, dice_str_out, self.dice_max, self.percentage_max() * 100), 
+                                      color=0x1ABC9C)
+                return embed
+        # In this re-write, works the output text so it is hidden behind spoiler
+        # tags if verbose is not selected.
         else:
-            if self.advantage | self.disadvantage:
-                outputString = """```{}\nTotal 1: [{}]; Total 2: [{}]```""".format(str_2, self.dice_total, self.dice_total_2)
-                return outputString
+            if self.advantage:
+                embed = discord.Embed(title="{}'s Roll: **{}**".format(author.display_name, max(self.dice_total,self.dice_total_2)), 
+                                      description="||{}\nTotal 1: [{}]; Total 2: [{}]\nRoll 1: {}; Roll 2: {};\nInput: [{}]; Maximum Possible: {}||".format(str_2, self.dice_total, self.dice_total_2, self.dice_indiv, self.dice_indiv_2, dice_str_out, self.dice_max), 
+                                      color=0x1ABC9C)
+                return embed
+            elif self.disadvantage:
+                embed = discord.Embed(title="{}'s Roll: **{}**".format(author.display_name, min(self.dice_total,self.dice_total_2)), 
+                                      description="||{}\nTotal 1: [{}]; Total 2: [{}]\nRoll 1: {}; Roll 2: {};\nInput: [{}]; Maximum Possible: {}||".format(str_2, self.dice_total, self.dice_total_2, self.dice_indiv, self.dice_indiv_2, dice_str_out, self.dice_max), 
+                                      color=0x1ABC9C)
+                return embed
             else:
-                outputString = f"""```{str_2} Total: {self.dice_total}```"""
-                return outputString  
+                embed = discord.Embed(title="{}{}'s Roll: **{}**".format(init_string, author.display_name, self.dice_total), 
+                                      description="||{}\nIndividual: {}; Input: [{}]\nMaximum Possible: {}; Percentage of Max Roll: {:.2f}%||".format(str_2, self.dice_indiv, dice_str_out, self.dice_max, self.percentage_max() * 100), 
+                                      color=0x1ABC9C)
+                return embed
+        # else:
+        #     if self.advantage:
+        #         embed = discord.Embed(title="{}'s Roll: **{}**".format(author.display_name, max(self.dice_total,self.dice_total_2)), 
+        #                               description="||{}\nTotal 1: [{}]; Total 2: [{}]||".format(str_2, self.dice_total, self.dice_total_2), 
+        #                               color=0x1ABC9C)
+        #         return embed
+        #     elif self.disadvantage:
+        #         embed = discord.Embed(title="{}'s Roll: **{}**".format(author.display_name, max(self.dice_total,self.dice_total_2)), 
+        #                               description="||{}\nTotal 1: [{}]; Total 2: [{}]||".format(str_2, self.dice_total, self.dice_total_2),
+        #                               color=0x1ABC9C)
+        #         return embed
+        #     else:
+        #         embed = discord.Embed(title="{}{}'s Roll: **{}**".format(init_string, author.display_name, self.dice_total), 
+        #                               description="||{}||".format(str_2),
+        #                               color=0x1ABC9C)
+        #         return embed
     
     # Does a nice check to see if the input matches any of the cases for "advantage."
     def check_double_roll(self, str_in):
         if (str_in.lower() == 'advantage') | (str_in.lower() == 'adv') | (str_in.lower() == 'a'):
             self.advantage = True
+            self.disadvantage = False
             return True
         elif (str_in.lower() == 'disadvantage') | (str_in.lower() == 'disadv') | (str_in.lower() == 'd'):
             self.disadvantage = True
+            self.advantage = True
             return True
         else:
             return False
@@ -286,10 +335,13 @@ class dice(commands.Cog):
         else: 
             self.dice_total = random.randint(1,20) + initiative
             secret_initiative = self.dice_total + (0.01 * dexterity)
+        # Making this class-driven so I can tweak the strings much more easily
+        self.bot.combat_class.AddPlayerToTurnOrder(author.display_name,
+                                                   secret_initiative)
         # Appends the author and initiative to the turn order, which should not
         # need to be returned anywhere since it can just be done right here...
-        self.bot.turn_order_ids.append(author.display_name)
-        self.bot.turn_order_values.append(secret_initiative)    
+        # self.bot.turn_order_ids.append(author.display_name)
+        # self.bot.turn_order_values.append(secret_initiative)    
         
         return dice_inputs
     
@@ -299,16 +351,20 @@ class dice(commands.Cog):
         if self.bot.combat_state == "Preparation Phase":
             # Check for author existing in the turn order. You obviously can't
             # be in the turn order twice, so only allows you to roll once.
-            if author.display_name not in self.bot.turn_order_ids:
+            if author.display_name not in self.bot.combat_class.PlayerNames:
                 # Roll for initiative. Different function from the main one!
                 dice_inputs = self.roll_initiative(author)
                 # Gets the pretty text for writing the results out!
-                outputString = self.roll_print(dice_inputs, author.display_name)
+                embed = self.roll_print(dice_inputs, author)
             else:
-                outputString = "```{} has already rolled Initiative!```".format(author.display_name)   
+                embed = discord.Embed(title="You have already rolled Initiative!",
+                                      description="Wait for the rest of your party to roll, {}!".format(author.mention),
+                                      color=0x1ABC9C)
         else:
-            outputString = "```It's not time to roll initiative, {}!```".format(author.display_name)
-        return outputString
+            embed = discord.Embed(title="It's not time to roll initiative!",
+                                  description="Wait for the DM to start combat, {}!".format(author.mention),
+                                  color=0xFF0000)
+        return embed
     
     @commands.Cog.listener()
     async def on_ready(self):
@@ -331,7 +387,7 @@ class dice(commands.Cog):
             # Rolls the dice! The fun stuff happens here.
             self.dice_roll(dice_inputs)
             # Makes the string lowercase, strips it and removes and whitespace, then adds exactly a single space around all + and - symbols
-            outputString = self.roll_print(dice_inputs, ctx.author.display_name)
+            embed = self.roll_print(dice_inputs, ctx.author)
         # Check if the first argument is the initiative or init argument. If 
         # it is, then goes into looking for the advantage/disadvantage rolls,
         # which it then works on... 
@@ -342,19 +398,20 @@ class dice(commands.Cog):
             # This is the check for an advantage roll. If it's an advantage roll
             # the first 2 arguments need to be removed (i.e. init adv instead of 
             # just init.).
-            if self.check_double_roll(arg[1]):
+            if ('adv' in arg) | ('advantage' in arg) | ('a' in arg) | ('disadv' in arg) | ('disadvantage' in arg) | ('d' in arg):
+                self.check_double_roll(arg[1])
                 arg = arg[2:]
             else:
                 arg = arg[1:]
-            outputString = self.initiative_roll(ctx.author)
+            embed = self.initiative_roll(ctx.author)
         # Finally, if there are no special cases happening... Just rolls the dice.
         # Same process as in initiative, but no initiative set in self.
         else:
             dice_inputs = ('{}'.format(''.join(arg))).lower()
             self.dice_roll(dice_inputs)
-            outputString = self.roll_print(dice_inputs, ctx.author.display_name)
-        
-        await ctx.send(outputString)
+            embed = self.roll_print(dice_inputs, ctx.author)
+            
+        await ctx.send(embed = embed)
         # Resets all the variables that have a chance to muck up our function!
         self.reset_all()
         
@@ -364,11 +421,15 @@ class dice(commands.Cog):
         # stats and stuff - turn it off to have a quieter bot.
         if self.verbose:
             self.verbose = False
-            outputString = "```{} grows quiet.\nDice rolls will now no longer show extra information.```".format(random.choice(self.bot.tree_lord_titles))
+            embed = discord.Embed(title="{} grows quiet.".format(random.choice(self.bot.tree_lord_titles)),
+                                  description="Dice rolls will hide additional info behind `spoiler` tags.",
+                                  color=0x1ABC9C)
         else:
             self.verbose = True
-            outputString = "```{} will show you the secrets of the world!\nDice rolls will now include all info.```".format(random.choice(self.bot.tree_lord_titles))
-        await ctx.send(outputString)
+            embed = discord.Embed(title="{} will show you the secrets of the world!".format(random.choice(self.bot.tree_lord_titles)),
+                                  description="Dice rolls will now always display all info.",
+                                  color=0x1ABC9C)
+        await ctx.send(embed = embed)
     
 
 def setup(bot):
